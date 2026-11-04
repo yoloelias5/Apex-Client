@@ -69,6 +69,17 @@ jobs:
               raise SystemExit("Could not find the expected upstream applicationId; refusing an unsafe patch.")
           gradle.write_text(source.replace(old, 'applicationId "com.apex.client"', 1), encoding="utf-8")
 
+          # CMake also contributes libc++_shared.so; prefer the bundled NDK copy.
+          packaging_anchor = "        jniLibs {\\n            useLegacyPackaging = true"
+          if packaging_anchor not in source:
+              raise SystemExit("Could not find the expected jniLibs packaging block.")
+          source = source.replace(
+              packaging_anchor,
+              packaging_anchor + '\\n            pickFirsts += ["**/libc++_shared.so"]',
+              1,
+          )
+          gradle.write_text(source, encoding="utf-8")
+
           found = False
           for strings in (root / "app/src/main/res").glob("values*/strings.xml"):
               data = strings.read_text(encoding="utf-8")
