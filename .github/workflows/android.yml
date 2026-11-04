@@ -1,8 +1,6 @@
 name: Build Apex Client APK
 
 on:
-  push:
-    branches: [ "main" ]
   workflow_dispatch:
 
 permissions:
