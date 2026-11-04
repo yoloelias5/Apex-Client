@@ -1,28 +1,36 @@
 # Apex Client
 
-Apex Client is an Android-first launcher project for Minecraft Bedrock, with an original purple/blue visual identity and a clean client-style interface inspired by the general layout conventions of desktop game clients.
+Apex Client is an Android-first Minecraft Bedrock launcher experiment built around the upstream [LeviLaunchroid](https://github.com/LiteLDev/LeviLaunchroid) project.
 
-## Current status
+## Current milestone
 
-This repository starts from the previous Android launcher prototype. It is a launcher foundation, **not yet an in-game Minecraft modification**. A successful APK build only confirms that the Android app compiles.
+**Milestone 1: establish a reliable Android Bedrock launcher foundation.**
 
-## Project goals
+The experimental workflow clones LeviLaunchroid at build time, applies Apex's Android package identity, and builds a debug APK. This is a launcher migration experiment—not a completed in-game client or HUD.
+
+## Product direction
 
 - Standalone Android APK
-- Apex icon and purple/blue branding
-- Clean, dark, Lunar-inspired launcher layout (original implementation and assets)
-- Detect and launch the installed Minecraft Bedrock app
-- Lightweight settings and launcher preferences
-- Investigate supported, permitted integration options before promising any in-game HUD
+- Apex purple/blue visual identity and supplied app icon
+- Dark, polished launcher UI inspired by the broad layout style of Lunar Client (original implementation and assets)
+- Minecraft Bedrock launch and version compatibility testing
+- Performance-conscious design
 
-## Requested client features
+## Planned client features
 
-Planned ideas include keystrokes, FPS, combo, armor/effects, ping, coordinates, custom crosshair, movable HUD widgets, and a zoom control. These are **not implemented**. A normal Android launcher cannot read Minecraft's private game state or draw a native in-game HUD merely by launching the game. Each feature needs a verified supported integration path; unavailable data must never be faked.
+The requested feature ideas include keystrokes, FPS, combo, armor/effects, ping, coordinates, a custom crosshair, movable HUD widgets, and a zoom control. None should be represented as implemented until there is a supported integration path and real-device verification.
 
-## Fair play
+LeviLaunchroid provides a possible native-module foundation, but it does not automatically implement these features. Each one needs compatibility testing against the exact Bedrock version and device. No fake live game data.
 
-No anti-cheat bypasses, aim assistance, automated attacks, or other unfair gameplay automation. No claim of multiplayer compatibility until tested.
+## Scope and fair play
+
+- No behavior packs, resource packs, Script API packs, or separate add-on files.
+- No anti-cheat bypasses, aim assistance, automated attacks, or other unfair gameplay automation.
+- Use supported launcher/native-module interfaces; no unauthorized process injection or bypassing Android protections.
+- Preserve upstream Apache-2.0 license and attribution notices when redistributing modified upstream code.
 
 ## Build
 
-GitHub Actions builds a debug APK on pushes to `main` and manual workflow dispatch. The artifact is a debug build for testing, not a Play Store release.
+Open **Actions → Apex Client — LeviLaunchroid experimental APK → Run workflow**.
+
+The workflow is manual-only to avoid a build queue on every documentation or source change. A successful build proves only that the launcher APK compiles; it does not prove Minecraft starts successfully or that HUD features work.
