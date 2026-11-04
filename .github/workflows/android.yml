@@ -66,8 +66,8 @@ jobs:
           source = gradle.read_text(encoding="utf-8")
           # Patch the application ID inside defaultConfig, allowing Groovy spacing/quote variations.
           source, app_id_count = re.subn(
-              r'(?m)^(\\s*applicationId\\s+)[\'"]org\\.levimc\\.launcher[\'"]',
-              r'\\1"com.apex.client"',
+              r'(?m)^(\s*applicationId\s+)[\'"]org\.levimc\.launcher[\'"]',
+              r'\1"com.apex.client"',
               source,
               count=1,
           )
@@ -76,8 +76,8 @@ jobs:
 
           # CMake and the bundled NDK runtime can both contribute libc++_shared.so.
           source, packaging_count = re.subn(
-              r'(jniLibs\\s*\\{\\s*useLegacyPackaging\\s*=\\s*true)',
-              r'\\1\\n            pickFirsts += ["**/libc++_shared.so"]',
+              r'(jniLibs\s*\{\s*useLegacyPackaging\s*=\s*true)',
+              r'\1\n            pickFirsts += ["**/libc++_shared.so"]',
               source,
               count=1,
           )
