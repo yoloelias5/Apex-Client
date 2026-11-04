@@ -67,7 +67,8 @@ jobs:
           old = 'applicationId "org.levimc.launcher"'
           if old not in source:
               raise SystemExit("Could not find the expected upstream applicationId; refusing an unsafe patch.")
-          gradle.write_text(source.replace(old, 'applicationId "com.apex.client"', 1), encoding="utf-8")
+          # Keep the application ID change in the same source buffer as the packaging patch.
+          source = source.replace(old, 'applicationId "com.apex.client"', 1)
 
           # CMake also contributes libc++_shared.so; prefer the bundled NDK copy.
           packaging_anchor = """        jniLibs {
