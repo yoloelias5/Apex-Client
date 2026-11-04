@@ -104,12 +104,27 @@ jobs:
           manager = root / "app/src/main/java/org/levimc/launcher/core/minecraft/GamePackageManager.kt"
           manager_source = manager.read_text(encoding="utf-8")
           anchor = "        verifyLibraries(outputDir)\n"
-          fallback = """        // Apex fallback: use the launcher's bundled C++ runtime if Minecraft omitted it.
-          if (!File(outputDir, "libc++_shared.so").let { it.exists() && it.length() > 0L }) {
+          fallback = """        // Apex fallback: copy the plain NDK C++ runtime from this launcher APK.
+          // Do not pass this known runtime through NativeImageGuard.processRequired().
+          if (!File(outputDir, "libc++_shared.so").let { it.isFile && it.length() > 0L }) {
               val launcherApk = context.applicationInfo.sourceDir
               if (launcherApk != null && File(launcherApk).isFile) {
-                  report("Checking launcher APK for libc++_shared.so")
-                  extractFromApk(launcherApk, outputDir, getDeviceAbi())
+                  try {
+                      ZipFile(launcherApk).use { zip ->
+                          val abiPath = "lib/\u0024{getDeviceAbi()}/libc++_shared.so"
+                          val entry = zip.getEntry(abiPath)
+                          if (entry != null) {
+                              zip.getInputStream(entry).use { input ->
+                                  copyStreamToReadOnlyFile(input, File(outputDir, "libc++_shared.so"))
+                              }
+                              report("Copied libc++_shared.so directly from launcher APK")
+                          } else {
+                              report("Launcher APK does not contain \u0024abiPath")
+                          }
+                      }
+                  } catch (e: Exception) {
+                      report("Failed to copy bundled libc++_shared.so: \u0024{e.message}")
+                  }
               }
           }
           """
