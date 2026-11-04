@@ -97,7 +97,20 @@ jobs:
                   strings.write_text(data, encoding="utf-8")
                   found = True
           if not found:
-              raise SystemExit("Could not find upstream app_name string; refusing an unbranded build.")
+              # Some upstream revisions provide app_name through a generated resource
+              # or a flavor-specific resValue instead of a strings.xml file.
+              # Set the manifest label directly so the APK is still branded reliably.
+              manifest_for_label = root / "app/src/main/AndroidManifest.xml"
+              manifest_label = manifest_for_label.read_text(encoding="utf-8")
+              manifest_label, label_count = re.subn(
+                  r'android:label="@string/app_name"',
+                  'android:label="Apex Client"',
+                  manifest_label,
+                  count=1,
+              )
+              if not label_count:
+                  raise SystemExit("Could not find an app label in strings.xml or AndroidManifest.xml.")
+              manifest_for_label.write_text(manifest_label, encoding="utf-8")
 
           # Some Minecraft APK splits omit the shared C++ runtime.
           # Try the copy bundled in the launcher APK as a fallback.
