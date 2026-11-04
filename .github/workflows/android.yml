@@ -1,45 +1,156 @@
-name: Build Apex Client APK
+name: Apex Client — LeviLaunchroid experimental APK
 
 on:
   workflow_dispatch:
+
+concurrency:
+  group: apex-levi-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
   build:
-    name: Build debug APK
+    name: Build Apex Android launcher
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout source
+      - name: Checkout Apex branding and build metadata
         uses: actions/checkout@v4
 
-      - name: Set up Java 17
+      - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "9.5.0"
+          java-version: "21"
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
         with:
-          packages: 'platform-tools'
+          packages: "platform-tools"
 
-      - name: Install Android SDK platform
-        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - name: Install Android SDK components
+        run: |
+          yes | sdkmanager --licenses
+          sdkmanager "platforms;android-36" "build-tools;35.0.0" "cmake;3.22.1"
 
-      - name: Build APK
-        run: gradle --no-daemon assembleDebug
+      - name: Set up Android NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r28c
+          link-to-sdk: true
 
-      - name: Upload APK
+      - name: Set up Xmake
+        uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: "2.9.9"
+          actions-cache-folder: ".xmake-cache"
+          actions-cache-key: "apex-levi-android"
+
+      - name: Fetch LeviLaunchroid source and submodules
+        run: |
+          git clone --recurse-submodules --depth 1 https://github.com/LiteLDev/LeviLaunchroid.git upstream
+
+      - name: Apply Apex package identity
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          root = Path("upstream")
+          gradle = root / "app/build.gradle"
+          source = gradle.read_text(encoding="utf-8")
+          old = 'applicationId "org.levimc.launcher"'
+          if old not in source:
+              raise SystemExit("Could not find the expected upstream applicationId; refusing an unsafe patch.")
+          gradle.write_text(source.replace(old, 'applicationId "com.apex.client"', 1), encoding="utf-8")
+
+          found = False
+          for strings in (root / "app/src/main/res").glob("values*/strings.xml"):
+              data = strings.read_text(encoding="utf-8")
+              data, count = re.subn(
+                  r'(<string\s+name="app_name">).*?(</string>)',
+                  r'\1Apex Client\2',
+                  data,
+                  count=1,
+                  flags=re.DOTALL,
+              )
+              if count:
+                  strings.write_text(data, encoding="utf-8")
+                  found = True
+          if not found:
+              raise SystemExit("Could not find upstream app_name string; refusing an unbranded build.")
+
+          # Some Minecraft APK splits omit the shared C++ runtime.
+          # Try the copy bundled in the launcher APK as a fallback.
+          manager = root / "app/src/main/java/org/levimc/launcher/core/minecraft/GamePackageManager.kt"
+          manager_source = manager.read_text(encoding="utf-8")
+          anchor = "        verifyLibraries(outputDir)\n"
+          fallback = """        // Apex fallback: use the launcher's bundled C++ runtime if Minecraft omitted it.
+          if (!File(outputDir, "libc++_shared.so").let { it.exists() && it.length() > 0L }) {
+              val launcherApk = context.applicationInfo.sourceDir
+              if (launcherApk != null && File(launcherApk).isFile) {
+                  report("Checking launcher APK for libc++_shared.so")
+                  extractFromApk(launcherApk, outputDir, getDeviceAbi())
+              }
+          }
+          """
+          if manager_source.count(anchor) != 1:
+              raise SystemExit("Native-library patch anchor changed upstream; refusing to patch.")
+          manager.write_text(manager_source.replace(anchor, fallback + anchor, 1), encoding="utf-8")
+
+          # Do not ship LeviMC's Google Play Games application id in Apex.
+          manifest = root / "app/src/main/AndroidManifest.xml"
+          manifest_text = manifest.read_text(encoding="utf-8")
+          manifest_text, removed = re.subn(
+              r'\s*<meta-data\s+android:name="com.google.android.gms.games.APP_ID"[\s\S]*?/>',
+              '',
+              manifest_text,
+              count=1,
+          )
+          if removed:
+              manifest.write_text(manifest_text, encoding="utf-8")
+
+          # The upstream Google Services plugin requires a config at build time.
+          # This CI-only placeholder is not a real Firebase project or credential.
+          (root / "app/google-services.json").write_text(
+              """{
+                "project_info": {
+                  "project_number": "000000000000",
+                  "project_id": "apex-client-ci-placeholder",
+                  "storage_bucket": "apex-client-ci-placeholder.appspot.com"
+                },
+                "client": [{
+                  "client_info": {
+                    "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+                    "android_client_info": {"package_name": "com.apex.client"}
+                  },
+                  "oauth_client": [],
+                  "api_key": [{"current_key": "AIzaSyCIOnlyPlaceholderKey"}],
+                  "services": {"appinvite_service": {"other_platform_oauth_client": []}}
+                }],
+                "configuration_version": "1"
+              }""",
+              encoding="utf-8",
+          )
+          PY
+          printf 'curseforge.api_key=\n' > upstream/local.properties
+
+      - name: Build debug APK
+        working-directory: upstream
+        run: |
+          chmod +x ./gradlew
+          ./gradlew --no-daemon :app:assembleDebug
+
+      - name: Verify APK output
+        run: |
+          test -s upstream/app/build/outputs/apk/debug/app-debug.apk
+          ls -lh upstream/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Upload Apex Client experimental APK
         uses: actions/upload-artifact@v4
         with:
-          name: apex-client-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: apex-client-levi-experimental-apk
+          path: upstream/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+          retention-days: 14
