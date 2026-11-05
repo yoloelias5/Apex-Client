@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -214,3 +214,16 @@ jobs:
           path: upstream/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
+
+      - name: Publish APK to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apex-v${{ github.run_number }}
+          name: Apex Client Build #${{ github.run_number }}
+          body: |
+            Automated Android APK build for Apex Client.
+
+            Install the APK on an Android ARM64 device. This is an experimental build.
+          files: upstream/app/build/outputs/apk/debug/app-debug.apk
+          prerelease: true
+          make_latest: false
