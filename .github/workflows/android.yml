@@ -122,15 +122,15 @@ jobs:
           # even when those APKs contain native game libraries. Scan every
           # collected APK and let the ZIP entry lookup decide whether it has libs.
           apk_filter = (
-              '        if (!apkPath.contains("arm") && !apkPath.contains("x86") && !apkPath.contains("base.apk")) {\\n'
-              '            return\\n'
-              '        }\\n'
+              '        if (!apkPath.contains("arm") && !apkPath.contains("x86") && !apkPath.contains("base.apk")) {\n'
+              '            return\n'
+              '        }\n'
           )
           if manager_source.count(apk_filter) != 1:
               raise SystemExit("APK split filename filter changed; refusing to patch.")
           manager_source = manager_source.replace(apk_filter, "", 1)
 
-          extraction_anchor = '            val apkPaths = apkFiles.map { it.absolutePath }\\n'
+          extraction_anchor = '            val apkPaths = apkFiles.map { it.absolutePath }\n'
           if manager_source.count(extraction_anchor) < 2:
               raise SystemExit("Expected installed and isolated APK extraction paths were not found.")
 
