@@ -172,19 +172,19 @@ jobs:
           # Some 26.x Minecraft APK layouts do not ship it; do not turn its absence
           # into a fatal launch error or an endless extraction-cache miss.
           cache_anchor = (
-              "    private fun getCacheRequiredLibs(): Array<String> {\\n"
-              "        return if (shouldLoadHttpClient()) {\\n"
-              "            requiredLibs + optionalLibs\\n"
-              "        } else {\\n"
-              "            requiredLibs\\n"
-              "        }\\n"
-              "    }\\n"
+              "    private fun getCacheRequiredLibs(): Array<String> {\n"
+              "        return if (shouldLoadHttpClient()) {\n"
+              "            requiredLibs + optionalLibs\n"
+              "        } else {\n"
+              "            requiredLibs\n"
+              "        }\n"
+              "    }\n"
           )
           if manager_source.count(cache_anchor) != 1:
               raise SystemExit("Optional-library cache anchor changed; refusing to patch.")
           manager_source = manager_source.replace(
               cache_anchor,
-              "    private fun getCacheRequiredLibs(): Array<String> = requiredLibs\\n",
+              "    private fun getCacheRequiredLibs(): Array<String> = requiredLibs\n",
               1,
           )
           manager.write_text(manager_source, encoding="utf-8")
@@ -192,37 +192,37 @@ jobs:
           runtime = root / "app/src/main/java/org/levimc/launcher/core/minecraft/MinecraftRuntimePreparer.kt"
           runtime_source = runtime.read_text(encoding="utf-8")
           runtime_anchor = (
-              "        val initializeBundledSdk = gameManager.shouldLoadMallocRedirect()\\n"
-              "        if (shouldLoadHttpClient(version)) {\\n"
+              "        val initializeBundledSdk = gameManager.shouldLoadMallocRedirect()\n"
+              "        if (shouldLoadHttpClient(version)) {\n"
           )
           runtime_replacement = (
-              "        val initializeBundledSdk = gameManager.shouldLoadMallocRedirect()\\n"
-              "        val hasHttpClient = shouldLoadHttpClient(version) &&\\n"
-              "            gameManager.resolveLibraryPath(\"HttpClient.Android\") != null\\n"
-              "        if (shouldLoadHttpClient(version)) {\\n"
+              "        val initializeBundledSdk = gameManager.shouldLoadMallocRedirect()\n"
+              "        val hasHttpClient = shouldLoadHttpClient(version) &&\n"
+              "            gameManager.resolveLibraryPath(\"HttpClient.Android\") != null\n"
+              "        if (shouldLoadHttpClient(version)) {\n"
           )
           if runtime_source.count(runtime_anchor) != 1:
               raise SystemExit("HTTP-client launch anchor changed; refusing to patch.")
           runtime_source = runtime_source.replace(runtime_anchor, runtime_replacement, 1)
-          runtime_load_anchor = '            loadLibrary(gameManager, "HttpClient.Android", 52, true, listener, trace)\\n'
+          runtime_load_anchor = '            loadLibrary(gameManager, "HttpClient.Android", 52, true, listener, trace)\n'
           runtime_load_replacement = (
-              '            if (hasHttpClient) {\\n'
-              '                loadLibrary(gameManager, "HttpClient.Android", 52, true, listener, trace)\\n'
-              '            } else {\\n'
-              '                listener.onLog("Skipping HttpClient.Android: not packaged with this Minecraft build")\\n'
-              '                trace.warning("Optional native library unavailable", "libHttpClient.Android.so")\\n'
-              '            }\\n'
+              '            if (hasHttpClient) {\n'
+              '                loadLibrary(gameManager, "HttpClient.Android", 52, true, listener, trace)\n'
+              '            } else {\n'
+              '                listener.onLog("Skipping HttpClient.Android: not packaged with this Minecraft build")\n'
+              '                trace.warning("Optional native library unavailable", "libHttpClient.Android.so")\n'
+              '            }\n'
           )
           if runtime_source.count(runtime_load_anchor) != 1:
               raise SystemExit("HTTP-client load anchor changed; refusing to patch.")
           runtime_source = runtime_source.replace(runtime_load_anchor, runtime_load_replacement, 1)
           runtime_exclude_anchor = (
-              '            if (shouldLoadHttpClient(version)) {\\n'
-              '                excludeLibs.add("HttpClient.Android")\\n'
+              '            if (shouldLoadHttpClient(version)) {\n'
+              '                excludeLibs.add("HttpClient.Android")\n'
           )
           runtime_exclude_replacement = (
-              '            if (hasHttpClient) {\\n'
-              '                excludeLibs.add("HttpClient.Android")\\n'
+              '            if (hasHttpClient) {\n'
+              '                excludeLibs.add("HttpClient.Android")\n'
           )
           if runtime_source.count(runtime_exclude_anchor) != 1:
               raise SystemExit("HTTP-client exclusion anchor changed; refusing to patch.")
