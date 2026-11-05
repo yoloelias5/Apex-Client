@@ -117,6 +117,23 @@ jobs:
           manager = root / "app/src/main/java/org/levimc/launcher/core/minecraft/GamePackageManager.kt"
           manager_source = manager.read_text(encoding="utf-8")
 
+          # Installed Minecraft uses multiple APK splits. The upstream filename
+          # filter drops split_install_pack.apk (and other non-ABI-named splits),
+          # even when those APKs contain native game libraries. Scan every
+          # collected APK and let the ZIP entry lookup decide whether it has libs.
+          apk_filter = (
+              '        if (!apkPath.contains("arm") && !apkPath.contains("x86") && !apkPath.contains("base.apk")) {\\n'
+              '            return\\n'
+              '        }\\n'
+          )
+          if manager_source.count(apk_filter) != 1:
+              raise SystemExit("APK split filename filter changed; refusing to patch.")
+          manager_source = manager_source.replace(apk_filter, "", 1)
+
+          extraction_anchor = '            val apkPaths = apkFiles.map { it.absolutePath }\\n'
+          if manager_source.count(extraction_anchor) < 2:
+              raise SystemExit("Expected installed and isolated APK extraction paths were not found.")
+
           verify_anchor = "        verifyLibraries(outputDir)\n"
           fallback = (
               "        // Apex fallback: some Minecraft APK splits omit libc++_shared.so.\n"
