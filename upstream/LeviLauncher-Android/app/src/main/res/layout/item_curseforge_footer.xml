@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pagination under the CurseForge results (Windows PagePagination). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center"
+    android:orientation="horizontal"
+    android:paddingTop="10dp"
+    android:paddingBottom="6dp">
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_prev_page"
+        style="@style/Widget.Levi.Button.Icon"
+        android:contentDescription="@string/previous"
+        android:enabled="false"
+        app:icon="@drawable/ic_ui_arrow_back" />
+
+    <TextView
+        android:id="@+id/tv_page_info"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="14dp"
+        android:layout_marginEnd="14dp"
+        android:text="@string/pagination_page_one"
+        android:textAppearance="@style/TextAppearance.Levi.Body"
+        android:textStyle="bold" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_next_page"
+        style="@style/Widget.Levi.Button.Icon"
+        android:contentDescription="@string/next"
+        android:enabled="false"
+        app:icon="@drawable/ic_ui_arrow_forward" />
+</LinearLayout>
