@@ -1,0 +1,47 @@
+name: Import LeviLauncher Android source
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apex-levilauncher-import
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Apex Client
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch LeviLauncher Android with its submodules
+        run: |
+          git clone --depth 1 --recurse-submodules --shallow-submodules \
+            https://github.com/LiteLDev/LeviLauncher-Android.git /tmp/levilauncher
+
+      - name: Import source without replacing Apex files
+        run: |
+          set -euo pipefail
+          mkdir -p upstream/LeviLauncher-Android
+          rsync -a --delete \
+            --exclude='.git' \
+            --exclude='app/curseforge-debug-apikey.bin' \
+            /tmp/levilauncher/ upstream/LeviLauncher-Android/
+
+      - name: Commit imported source
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add upstream/LeviLauncher-Android
+          if git diff --cached --quiet; then
+            echo "LeviLauncher source is already up to date."
+            exit 0
+          fi
+          git commit -m "Import LeviLauncher Android source"
+          git push
