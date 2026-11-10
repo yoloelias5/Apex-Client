@@ -1,12 +1,23 @@
 # Apex Client
 
-Apex Client is an Android-first Minecraft Bedrock launcher experiment built around the upstream [LeviLaunchroid](https://github.com/LiteLDev/LeviLaunchroid) project.
+Apex Client is an Android-first Minecraft Bedrock launcher experiment built around the LeviMC Android launcher codebase.
 
 ## Current milestone
 
 **Milestone 1: establish a reliable Android Bedrock launcher foundation.**
 
-The experimental workflow clones LeviLaunchroid at build time, applies Apex's Android package identity, and builds a debug APK. This is a launcher migration experiment—not a completed in-game client or HUD.
+The repository keeps Apex's own app scaffold and branding at the root. The full upstream LeviLauncher Android source can be imported into `upstream/LeviLauncher-Android/` without creating a fork or overwriting Apex's existing files.
+
+## Import LeviLauncher source
+
+1. Open **Actions** in this repository.
+2. Select **Import LeviLauncher Android source**.
+3. Press **Run workflow** on the `main` branch.
+4. When it finishes, the complete upstream source (including initialized submodule contents) will be committed under `upstream/LeviLauncher-Android/`.
+
+The import preserves the Apex root project and its docs. The upstream source keeps its own Apache-2.0 license and bundled third-party notices. The upstream debug API-key file is deliberately not copied.
+
+**Important:** importing the source does not yet make it the active root Android build. It is staged for inspection and integration; no APK build or device launch is claimed by this import step.
 
 ## Product direction
 
@@ -20,7 +31,7 @@ The experimental workflow clones LeviLaunchroid at build time, applies Apex's An
 
 The requested feature ideas include keystrokes, FPS, combo, armor/effects, ping, coordinates, a custom crosshair, movable HUD widgets, and a zoom control. None should be represented as implemented until there is a supported integration path and real-device verification.
 
-LeviLaunchroid provides a possible native-module foundation, but it does not automatically implement these features. Each one needs compatibility testing against the exact Bedrock version and device. No fake live game data.
+LeviLauncher provides a possible native-module foundation, but it does not automatically implement these features. Each one needs compatibility testing against the exact Bedrock version and device. No fake live game data.
 
 ## Scope and fair play
 
@@ -31,6 +42,4 @@ LeviLaunchroid provides a possible native-module foundation, but it does not aut
 
 ## Build
 
-Open **Actions → Apex Client — LeviLaunchroid experimental APK → Run workflow**.
-
-The workflow is manual-only to avoid a build queue on every documentation or source change. A successful build proves only that the launcher APK compiles; it does not prove Minecraft starts successfully or that HUD features work.
+The root project still has its existing experimental build workflow. The imported LeviLauncher source is not wired into that workflow yet.
